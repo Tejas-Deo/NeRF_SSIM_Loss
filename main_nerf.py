@@ -161,7 +161,7 @@ if __name__ == '__main__':
     
     elif opt.mode == 'train':
         optimizer = lambda model: torch.optim.Adam(model.get_params(opt.lr), betas=(0.9, 0.99), eps=1e-15)
-        scheduler = lambda optimizer: optim.lr_scheduler.LambdaLR(optimizer, lambda iter: 0.1 ** min(iter / opt.iters, 1))
+        scheduler = lambda optimizer: optim.lr_scheduler.LambdaLR(optimizer, lambda iter: 0.99 ** min(iter / opt.iters, 1))
 
         trainer = Trainer('ngp', opt, model, device=device, workspace=opt.workspace, 
                           optimizer=optimizer, criterion=criterion, ema_decay=0.95, fp16=opt.fp16, 

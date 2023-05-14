@@ -912,102 +912,113 @@ class Trainer(object):
         print("Ouput: ", outputs)
         print("Length of output: ", len(outputs))
 
+        # print("Shapes: ", outputs[0].shape, outputs[1].shape)
+
+        # sys.exit()
+
+
+
         
         if data['type'] == 'rgb':
+            print("The shape of the gt_rgb is: ", gt_rgb.shape)
+
+            # gt_renewed = gt_rgb.squeeze().cpu().numpy()
+            # gt_renewed = np.reshape(gt_renewed, [64, 64, 3])
+            # gt_renewed = np.uint8(gt_renewed * 255)  # to get the color valyes in the range of 0-255
+            
+            # print("Checking for gt_rgb: ", gt_rgb.shape, type(gt_rgb), gt_rgb.device)
+            # #plt.imsave("/home/tejas/Documents/Stanford/ARMLab/Nerf-By-Touch/torch-ngp/depth_gt_image.png", gt_tensor, cmap="gray")
+
+            # # have to declare that as a tensor to be able to use the backward() function
+            # gt_renewed = torch.from_numpy(gt_renewed).float()
+            # print("The renewed tensor of gt_tensor:", type(gt_renewed))
+            
+            # gt_renewed.requires_grad = True
+            # gt_renewed = gt_renewed.view(1, 3, 64, 64).cuda()
+            # print("New tensor gt_shape: ", gt_renewed.shape)
+            # print()
+
+            # # for the predicted rays color values
             pred_rgb = outputs['image']
-            # print("Type of predicted and gt rgb: ", type(pred_rgb), type(gt_rgb))
-            # print('Shape of pred and gt rgb: ', pred_rgb.shape, gt_rgb.shape)
-            #print(pred_rgb)
-            #print(gt_rgb)
-            #stop
+
+            # print("shapes of pred_depth for depth images: ", pred_rgb.shape)
+
+            # pred_renewed = pred_rgb.detach().squeeze().cpu().numpy()
+            # pred_renewed = np.reshape(pred_renewed, [64, 64, 3])
+            # pred_renewed = np.uint8(pred_renewed * 255)
+            # #plt.imsave("/home/tejas/Documents/Stanford/ARMLab/Nerf-By-Touch/torch-ngp/depth_pred_image.png", pred_tensor, cmap="gray")
+
+            # pred_renewed = torch.from_numpy(pred_renewed).float()
+            # pred_renewed.requires_grad = True
+            # pred_renewed = pred_renewed.view(1, 3, 64, 64).cuda()
+
+            # #value = pytorch_ssim.ssim(gt_renewed, pred_renewed)
+            # #print("Value of SSIM is: ", value)
+
+            # ssim_loss = pytorch_ssim.SSIM()
+
+            # ssim_out = -ssim_loss(gt_renewed, pred_renewed)
+            # ssim_value = - ssim_out
+            # print("Final loss for the COLOR IMAGES: ", ssim_value)
+
+            # loss = ssim_out
+
             l2 = torch.nn.MSELoss()
-            #var_loss = torch.mean(torch.max(torch.abs(pred_rgb-gt_rgb),dim=-1)[0].unsqueeze(-1)/(outputs['image_var']+1e-10))
-            #print("predicted image")
-            #print(outputs['image'])
-            #print("gt image")
-            #print(gt_rgb)
-
-
-            # tensor_np = pred_rgb.detach().squeeze().cpu().numpy()
-            # tensor_np = np.reshape(tensor_np, [64, 64, 3])
-            # tensor_np = np.uint8(tensor_np * 255)
-            # image = Image.fromarray(tensor_np, 'RGB')
-            # print('Saved the  predicted image.....')
-            # image.save("/home/tejas/Documents/Stanford/ARMLab/Nerf-By-Touch/torch-ngp/pred_image.png")
-            # print("Shape of pred_rgb and gt_rgb before being passed into the loss fn: ", pred_rgb.shape, gt_rgb.shape)
-            
-
-
             loss = l2(pred_rgb, gt_rgb) #+ torch.max(torch.abs(pred_rgb-gt_rgb),dim=-1)[0].mean()#torch.log(1+torch.square(pred_rgb-gt_rgb)/gt_rgb).mean() + torch.max(torch.abs(pred_rgb-gt_rgb),dim=-1)[0].mean()#(2*torch.log(torch.square(pred_rgb-gt_rgb)+1e-12)).mean()
-            
             print("Loss RGB images: ", loss)
-            #print("Scaled loss: ", loss * 10)
 
-            #print("Mean loss: ", loss.mean())
+            print("Exiting the system after checking the shapes for the rgb images....")
             #sys.exit()
-            #print("max diff")
-            #print(torch.max(torch.abs(pred_rgb-gt_rgb)))
-            #print(" ")
-
-            #torch.max(torch.abs(pred_rgb-gt_rgb),dim=-1)[0].mean() #l2(pred_rgb,gt_rgb) #+ 1e-4*var_loss#torch.max(torch.abs(pred_rgb-gt_rgb),dim=-1)[0].mean()
-            #print("CHECKING ELEMENTS")
-            #print(torch.any(torch.isnan(pred_rgb)))
-            #print(torch.any(torch.isinf(pred_rgb)))
-            #print(torch.any(torch.isnan(gt_rgb)))
-            #print(torch.any(torch.isinf(gt_rgb)))
-            #stop
-            # loss = torch.max(torch.abs(pred_rgb-gt_rgb),dim=-1)[0].mean()
 
 
 
-
-        elif data['type'] == 'depth':
-            gt_rgb = torch.squeeze(gt_rgb,axis=-1)
+        '''
+        For the depth provider, we have already converted the images into raw distances based on camera intrinsics
+        '''
+        
+        if data['type'] == 'depth':
+            gt_rgb = torch.squeeze(gt_rgb,axis=-1)  # this is not technically the rgb values, but the gt images for depth
 
             print("shapes of gt_rgb for depth images: ", gt_rgb.shape)
 
-            gt_tensor = gt_rgb.squeeze().cpu().numpy()
-            gt_tensor = np.reshape(gt_tensor, [64, 64])
-            gt_tensor = np.uint8(gt_tensor * 255)
-            #print("gt_tensor shape: ", gt_tensor.shape)
+            gt_renewed = gt_rgb.squeeze().cpu().numpy()
+            gt_renewed = np.reshape(gt_renewed, [64, 64])
+            gt_renewed = np.uint8(gt_renewed * 255)  # to convert into an image
+            
+            print("Checking for gt_rgb: ", gt_rgb.shape, type(gt_rgb), gt_rgb.device)
             #plt.imsave("/home/tejas/Documents/Stanford/ARMLab/Nerf-By-Touch/torch-ngp/depth_gt_image.png", gt_tensor, cmap="gray")
 
+            # have to declare that as a tensor to be able to use the backward() function
+            gt_renewed = torch.from_numpy(gt_renewed).float()
+            print("The renewed tensor of gt_tensor:", type(gt_renewed))
+            
+            gt_renewed.requires_grad = True
+            gt_renewed = gt_renewed.view(1, 1, 64, 64).cuda()
+            print("New tensor gt_shape: ", gt_renewed.shape)
+            
 
-            new_gt_tensor = torch.from_numpy(gt_tensor).float()
-            new_gt_tensor.requires_grad = True
-            new_gt_tensor = new_gt_tensor.view(1, 1, 64, 64).cuda()
-
-            #print(gt_rgb.shape)
+            # for the predicted depth (raw distances) from the rays
             pred_depth = outputs['depth']
 
             print("shapes of pred_depth for depth images: ", pred_depth.shape)
 
-            pred_tensor = pred_depth.detach().squeeze().cpu().numpy()
-            pred_tensor = np.reshape(pred_tensor, [64, 64])
-            pred_tensor = np.uint8(pred_tensor * 255)
+            pred_renewed = pred_depth.detach().squeeze().cpu().numpy()
+            pred_renewed = np.reshape(pred_renewed, [64, 64])
+            pred_renewed = np.uint8(pred_renewed * 255)
             #plt.imsave("/home/tejas/Documents/Stanford/ARMLab/Nerf-By-Touch/torch-ngp/depth_pred_image.png", pred_tensor, cmap="gray")
 
-            new_pred_tensor = torch.from_numpy(pred_tensor).float()
-            new_pred_tensor.requires_grad = True
-            new_pred_tensor = new_pred_tensor.view(1, 1, 64, 64).cuda()
+            pred_renewed = torch.from_numpy(pred_renewed).float()
+            pred_renewed.requires_grad = True
+            pred_renewed = pred_renewed.view(1, 1, 64, 64).cuda()
 
-
-
-            print()
-            value = pytorch_ssim.ssim(new_gt_tensor, new_pred_tensor)
+            value = pytorch_ssim.ssim(gt_renewed, pred_renewed)
             print("Value of SSIM is: ", value)
 
             ssim_loss = pytorch_ssim.SSIM()
 
-            ssim_out = -ssim_loss(new_gt_tensor, new_pred_tensor) * 10
+            ssim_out = -ssim_loss(gt_renewed, pred_renewed) * 10
             ssim_value = - ssim_out
-            print("Final loss: ", ssim_value)
-
-            #ssim_loss = pytorch_ssim.SSIM(window_size = 11)
-            #print("SSIM Loss: ", ssim_loss(new_gt_tensor, new_pred_tensor) * -10)
-
-            #print("Depth loss mean: ", ssim_loss.mean())
-
+            print("Final loss for the DEPTH IMAGES: ", ssim_value)
 
             # print("CHECKING NETWORK RESULT")
             # print(gt_rgb)
@@ -1020,40 +1031,84 @@ class Trainer(object):
             loss = ssim_out
 
             print("Shapes after the loss has been calculated for gt and pred: ", gt_rgb.shape, pred_depth.shape)
-            pred_rgb = outputs['image']
+            pred_rgb = outputs['depth']
 
             #sys.exit()
 
 
 
 
-        elif data['type'] == 'touch':
-            gt_rgb = torch.squeeze(gt_rgb,axis=-1)
+        if data['type'] == 'touch':
+            gt_rgb = torch.squeeze(gt_rgb,axis=-1)  # this is not technically the rgb values, but the gt images for depth
+
+            print("shapes of gt_rgb for depth images: ", gt_rgb.shape)
+
+            gt_renewed = gt_rgb.squeeze().cpu().numpy()
+            gt_renewed = np.reshape(gt_renewed, [64, 64])
+            gt_renewed = np.uint8(gt_renewed * 255)  # to convert into an image
+            
+            print("Checking for gt_rgb: ", gt_rgb.shape, type(gt_rgb), gt_rgb.device)
+            #plt.imsave("/home/tejas/Documents/Stanford/ARMLab/Nerf-By-Touch/torch-ngp/depth_gt_image.png", gt_tensor, cmap="gray")
+
+            # have to declare that as a tensor to be able to use the backward() function
+            gt_renewed = torch.from_numpy(gt_renewed).float()
+            print("The renewed tensor of gt_tensor:", type(gt_renewed))
+            
+            gt_renewed.requires_grad = True
+            gt_renewed = gt_renewed.view(1, 1, 64, 64).cuda()
+            print("New tensor gt_shape: ", gt_renewed.shape)
+            
+
+            # for the predicted depth (raw distances) from the rays
             pred_depth = outputs['depth']
-            l2 = torch.nn.MSELoss()
-            l1 = torch.nn.L1Loss()
-            #print("vals")
-            #print(pred_depth[gt_rgb<self.opt.touch_far].shape)
-            touch_loss = l1(pred_depth,gt_rgb)
-            #print("CHECK VALUES")
-            #print(touch_loss)
-            #print(pred_depth)
-            #print(gt_rgb)
-            loss = touch_loss
 
-            pred_rgb = outputs['image']
+            print("shapes of pred_depth for depth images: ", pred_depth.shape)
+
+            pred_renewed = pred_depth.detach().squeeze().cpu().numpy()
+            pred_renewed = np.reshape(pred_renewed, [64, 64])
+            pred_renewed = np.uint8(pred_renewed * 255)
+            #plt.imsave("/home/tejas/Documents/Stanford/ARMLab/Nerf-By-Touch/torch-ngp/depth_pred_image.png", pred_tensor, cmap="gray")
+
+            pred_renewed = torch.from_numpy(pred_renewed).float()
+            pred_renewed.requires_grad = True
+            pred_renewed = pred_renewed.view(1, 1, 64, 64).cuda()
+
+            value = pytorch_ssim.ssim(gt_renewed, pred_renewed)
+            print("Value of SSIM is: ", value)
+
+            ssim_loss = pytorch_ssim.SSIM()
+
+            ssim_out = - ssim_loss(gt_renewed, pred_renewed) * 10
+            ssim_value = - ssim_out
+            print("Final loss for the DEPTH IMAGES: ", ssim_out)
+
+            loss = ssim_out
+
+            pred_rgb = outputs['depth']
+
+            # value = pytorch_ssim.ssim(gt_rgb, pred_depth)
+            # print("The initial value of SSIM loss for TOUCH IMAGES IS: ", value)
+
+            # ssim_loss = pytorch_ssim.SSIM()
+            # ssim_out = -ssim_loss(gt_rgb, pred_depth) * 10
+            # print("The value of SSIM loss for TOUCH IMAGES IS: ", ssim_out)
+            # ssim_value = -ssim_out
+
+            # print("The final value of SSIM loss for TOUCH IMAGES IS: ", ssim_value)
+            
+
+            # loss = ssim_out
+
+            #print("Exiting from touch...")
+            #sys.exit()
             # print("not implemented touch yet!")
-           
-        # print("loss")
-        # print(loss)
-        # special case for CCNeRF's rank-residual training
 
 
 
-        # if len(loss.shape) == 3: # [K, B, N]
-        #     loss = loss.mean(0)
-        #     print("Loss: ", loss)
-        #     sys.exit()
+
+
+
+
 
         # update error_map
         if self.error_map[data['type']] is not None:

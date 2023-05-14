@@ -321,6 +321,7 @@ class NeRFDataset:
                 if image.shape[0] != self.H[-1] or image.shape[1] != self.W[-1]:
                     image = cv2.resize(image, (self.W[-1], self.H[-1]), interpolation=cv2.INTER_AREA)
                     
+                # normalizing the image to [0,1]
                 image = image.astype(np.float32) / 255 # [H, W, 3/4]
 
                 self.poses.append(pose)
@@ -388,14 +389,18 @@ class NeRFDataset:
 
 
                 elif 'camera_angle_x' in camera or 'camera_angle_y' in camera:
+                    print("Inside the elif statement....")
                     
                     if 'camera_angle_x' in camera:
                         if not isinstance(camera['camera_angle_x'], list):
                             angle_x = camera['camera_angle_x']
+                            print("Assigned the value for camera_angle_x....")
                         else:
                             angle_x = camera['camera_angle_x'][0]
 
                         fl_x = self.W[i] / (2 * np.tan(angle_x / 2))
+                        print("Assigned the value for fl_x....", fl_x)
+
                     else:
                         fl_x = None
 
@@ -414,7 +419,11 @@ class NeRFDataset:
                     #      and not in pixel lengths. However, this doesn't matter too much for perspective cameras
                     #      with fovs smaller than 60-70 degrees. However, sensor_size IS CRITICAL for FISHEYE CAMERAS
                     if fl_x is not None and fl_y is not None: sensor_size = np.sqrt(self.W[i]**2 + self.H[i]**2)
-                    elif fl_x is not None: sensor_size = self.W[i]
+                    elif fl_x is not None: 
+                        sensor_size = self.W[i]
+                        print("Assigned the value for sensor_size....", sensor_size)
+                        print("Exiting....")
+                        #sys.exit()
                     elif fl_y is not None: sensor_size = self.H[i]
 
                     if fl_x is None: fl_x = fl_y
@@ -423,6 +432,8 @@ class NeRFDataset:
                 cx = (transform["cameras"][f["camera"]]['cx'] / downscale) if 'cx' in transform["cameras"][f["camera"]] else (self.W[i] / 2)
                 cy = (transform["cameras"][f["camera"]]['cy'] / downscale) if 'cy' in transform["cameras"][f["camera"]] else (self.H[i] / 2)
             
+                # print("Sensor size value before appending to the intrinsics: ", sensor_size)
+                # sys.exit()
                 self.intrinsics.append(np.array([fl_x, fl_y, cx, cy, sensor_size]))
             
             self.intrinsics = np.asarray(self.intrinsics)
@@ -507,8 +518,8 @@ class NeRFDataset:
 
             print("Rays: ", rays)
 
-            print("Exiting from the collate function inside the rgb data....")
-            sys.exit()
+            # print("Exiting from the collate function inside the rgb data....")
+            # sys.exit()
 
 
             #print("OH NO")

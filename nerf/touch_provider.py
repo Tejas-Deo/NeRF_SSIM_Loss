@@ -1,4 +1,4 @@
-import os
+import os, sys
 import cv2
 import glob
 import json
@@ -336,8 +336,10 @@ class NeRFTouchDataset:
             if self.error_map is not None:
                 self.error_map = self.error_map.to(self.device)
 
+
         # load intrinsics (use equisolid model)
         if 'cameras' in transform:
+            print("="*100)
             self.intrinsics = []
             for i, f in enumerate(transform["frames"]):
                 camera = transform["cameras"][f["camera"]] 
@@ -357,29 +359,43 @@ class NeRFTouchDataset:
                     
                     # if x axis fov was given
                     if 'camera_angle_x' in camera:
+                        print("*"*100)
                         if not isinstance(camera['camera_angle_x'], list):
                             angle_x = camera['camera_angle_x']
+                            print("Angle X: ", angle_x)
+                            
+
                         else:
                             angle_x = camera['camera_angle_x'][0]
+                            sensor_size = 0.036 * 0.024
+                            print("Sensor size: ", sensor_size)
+                            print("Angle X: ", angle_x)
+                            
 
     
                         #NOTE: Note sensor size is the region of a digital camera that’s sensitive to light
                         #      and records an image when active. cite: https://capturetheatlas.com/camera-sensor-size/
                         #      this is critical for fisheye cameras, but not really relevant for perspective cameras!!
-                        sensor_size = camera['sensor_size'] if 'sensor_size' in camera else None
+                        #sensor_size = camera['sensor_size'] if 'sensor_size' in camera else None
                     
                         if sensor_size is None:
                             fl_x = None
                         else:
                             fl_x = sensor_size/(4*np.sin(angle_x/4))
+                            print("Assigned fl_x value for sensor X: ", fl_x)
+                            #sys.exit()
+                    
                     else:
                         fl_x = None
+                    
+                    
                     
                     if 'camera_angle_y' in camera:
                         if not isinstance(camera['camera_angle_y'], list):
                             angle_y = camera['camera_angle_y']
                         else:
                             angle_y = camera['camera_angle_y'][0]
+
 
                         
                         #NOTE: Note sensor size is the region of a digital camera that’s sensitive to light
@@ -399,18 +415,24 @@ class NeRFTouchDataset:
                     if fl_x is None and fl_y is not None: fl_x = fl_y
                     if fl_y is None and fl_x is not None: fl_y = fl_x
 
+                    
+
                     if sensor_size is None:
                         raise RuntimeError('Failed to load sensor size, please check the transforms.json!')
 
                 else:
                     raise RuntimeError('Failed to load focal length, please check the transforms.json!')
                     
+                
+
                 cx = (transform["cameras"][f["camera"]]['cx'] / downscale) if 'cx' in transform["cameras"][f["camera"]] else (self.W[i] / 2)
                 cy = (transform["cameras"][f["camera"]]['cy'] / downscale) if 'cy' in transform["cameras"][f["camera"]] else (self.H[i] / 2)
 
                 self.intrinsics.append(np.array([fl_x, fl_y, cx, cy, sensor_size]))
 
             self.intrinsics = np.asarray(self.intrinsics)
+        
+        
         else:
             if 'fl_x' in transform or 'fl_y' in transform:
                 fl_x = (transform['fl_x'] if 'fl_x' in transform else transform['fl_y']) / downscale

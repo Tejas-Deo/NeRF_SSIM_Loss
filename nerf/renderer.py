@@ -169,7 +169,7 @@ class NeRFRenderer(nn.Module):
         #print(f'nears = {nears.min().item()} ~ {nears.max().item()}, fars = {fars.min().item()} ~ {fars.max().item()}')
 
 
-        # to get the sampling points along eahc ray
+        # to get the sampling points along each ray
         z_vals = torch.linspace(0.0, 1.0, num_steps, device=device).unsqueeze(0) # [1, T]
         z_vals = z_vals.expand((N, num_steps)) # [N, T]
         z_vals = nears + (fars - nears) * z_vals # [N, T], in [nears, fars] # [N, num_steps]
@@ -216,7 +216,7 @@ class NeRFRenderer(nn.Module):
         This section generates a set of 3D points xyzs along each ray by calculating the outer 
         product of the rays_o and rays_d tensors with the z_vals tensor. Specifically, the first 
         two dimensions of rays_o and rays_d are broadcasted to create a (N, T, 3) tensor where T 
-        is the number of samples along each ray, and then the z_vals tensor is broadcasted along 
+        is the number of samples along each ray, N is the number of rays, and then the z_vals tensor is broadcasted along 
         the last dimension to create a (N, T, 1) tensor. The element-wise multiplication of 
         these tensors produces a (N, T, 3) tensor representing the 3D coordinates of each sample 
         point along the ray. Finally, the xyzs tensor is clipped to be within the bounds of the 
